@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broken Motor | Salvage Assessment #1024</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#171A1F;--panel:#20252C;--p2:#282E36;--line:#364049;--tx:#E7EAEE;--mut:#9AA3AF;--yel:#F5C518;--grn:#3DCB6B;--amb:#FF9F1C;--red:#EF4444;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;margin:0;font-weight:600}
+.top{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;padding:14px 24px;border-bottom:3px solid var(--yel);background:var(--panel)}
+.top h1{font-size:34px;line-height:1}
+.top p{margin:2px 0 0;color:var(--mut)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.chip{background:var(--p2);border:1px solid var(--line);border-radius:4px;padding:3px 9px;font-size:12.5px}
+.badge{padding:6px 12px;border-radius:4px;font-weight:600;border:1px solid var(--amb);color:var(--amb)}
+.badge.done{border-color:var(--grn);color:var(--grn)}
+.note{padding:8px 24px;background:#1d2127;color:var(--mut);border-bottom:1px solid var(--line)}
+.note b{color:var(--tx);font-weight:500}
+#pipe{display:flex;gap:6px;padding:12px 24px;overflow-x:auto}
+#pipe button{flex:1;min-width:130px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:4px;color:var(--tx);padding:8px 10px;cursor:pointer;font:inherit}
+#pipe button:hover,#pipe button.on{border-color:var(--yel)}
+#pipe b{display:block;font-family:"Barlow Condensed",sans-serif;font-size:17px;font-weight:600}
+#pipe small{color:var(--mut)}
+.ok{color:var(--grn)}.warn{color:var(--amb)}.bad{color:var(--red)}
+.grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(340px,.8fr);gap:16px;padding:0 24px 16px}
+.vw{position:sticky;top:8px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.tb{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-bottom:1px solid var(--line)}
+.tb button,.btn{background:var(--p2);color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:5px 10px;cursor:pointer;font:inherit;font-size:13px}
+.tb button:hover,.btn:hover{border-color:var(--yel)}
+.tb button.on{background:var(--yel);color:#111;border-color:var(--yel)}
+.tb .sp{flex:1}
+#view{height:min(66vh,620px);position:relative;background:radial-gradient(circle at 50% 40%,#2a313a,#14181d)}
+#view canvas{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#tip{position:absolute;pointer-events:none;background:#0d0f12e6;border:1px solid var(--line);padding:5px 9px;border-radius:4px;font-size:12.5px;display:none;max-width:240px}
+.leg{display:flex;flex-wrap:wrap;gap:14px;padding:8px 12px;border-top:1px solid var(--line);color:var(--mut);font-size:12.5px}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+.help{position:absolute;left:10px;bottom:8px;color:var(--mut);font-size:12px;pointer-events:none}
+aside{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:6px;padding:12px 14px}
+.card.ok{border-left-color:var(--grn)}.card.warn{border-left-color:var(--amb)}.card.bad{border-left-color:var(--red)}
+.card.flash{outline:2px solid var(--yel)}
+.card h3{font-size:19px;display:flex;justify-content:space-between;gap:8px}
+.card h3 span{font:600 12px Inter;padding:2px 8px;border-radius:3px;border:1px solid currentColor}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:8px 0}
+.card dt{color:var(--mut)}.card dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.card p{margin:6px 0 0;color:var(--mut)}
+.card p b{color:var(--tx);font-weight:500}
+.sec{font-size:22px;margin:6px 0 -2px;color:var(--yel)}
+.bar{height:8px;background:var(--p2);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%}
+.mrow{display:grid;grid-template-columns:130px 1fr 44px;gap:8px;align-items:center;margin:5px 0;font-size:13px}
+ol{margin:6px 0 0;padding-left:20px;color:var(--mut)}
+#decision{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;padding:0 24px 28px}
+#decision>div{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+#decision h2{font-size:24px;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:500}th,td{padding:5px 4px;border-bottom:1px solid var(--line)}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+.gauge{width:230px;display:block;margin:0 auto}
+.th{position:relative;height:12px;border-radius:6px;margin:16px 0 4px;background:linear-gradient(90deg,var(--red) 0 30%,var(--amb) 30% 60%,var(--grn) 60% 100%)}
+.th i{position:absolute;top:-5px;width:4px;height:22px;background:#fff;border-radius:2px;transition:left .5s}
+.thl{display:flex;color:var(--mut);font-size:12px}.thl span:nth-child(1){width:30%}.thl span:nth-child(2){width:30%}
+.sug{padding:12px;border-radius:6px;background:var(--p2);border:1px solid var(--line)}
+.sug strong{font:700 28px "Barlow Condensed",sans-serif}
+.dbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.dbtns button{position:relative;padding:16px 4px;border-radius:5px;border:2px solid;font:700 20px "Barlow Condensed",sans-serif;cursor:pointer;color:#111}
+.dbtns button.s{background:var(--grn);border-color:var(--grn)}.dbtns button.e{background:var(--amb);border-color:var(--amb)}.dbtns button.d{background:var(--red);border-color:var(--red);color:#fff}
+.dbtns button:not(.sel){opacity:.55}.dbtns button.sel,.dbtns button:hover{opacity:1}
+.dbtns button.sel{box-shadow:0 0 0 3px var(--bg),0 0 0 5px #fff}
+.dbtns em{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--yel);color:#111;font:600 11px Inter;padding:1px 7px;border-radius:3px;display:none;white-space:nowrap}
+.dbtns button.sg em{display:block}
+textarea{width:100%;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:8px;font:inherit;min-height:64px;resize:vertical}
+.warnbox{color:var(--amb);margin:6px 0}
+.go{background:var(--yel);color:#111;font-weight:600;border:0;padding:9px 16px;border-radius:4px;cursor:pointer;margin-top:8px;font:600 14px Inter}
+.sl{display:grid;grid-template-columns:140px 1fr 38px;gap:8px;align-items:center;margin:8px 0}
+input[type=range]{accent-color:var(--yel);width:100%}
+.route{margin-top:10px;padding:10px;border:1px dashed var(--line);border-radius:5px;color:var(--mut)}
+.route b{color:var(--tx);font-weight:500}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}.vw{position:static}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div><h1>Broken Motor</h1><p>Salvage assessment, Part #1024</p></div>
+  <div class="chips">
+    <span class="chip">Dual-shaft BO motor</span><span class="chip">Source: RC toy car</span><span class="chip">Intake 12-10-2026</span><span class="chip">Weight about 45 g</span><span class="chip">QR tagged</span>
+  </div>
+  <span id="status" class="badge">Awaiting expert decision</span>
+</header>
+<div class="note"><b>Intake note:</b> Housing cracked, gear teeth stripped, shaft bent. Terminals show corrosion.</div>
+<nav id="pipe"></nav>
+
+<main class="grid">
+  <section class="vw">
+    <div class="tb" id="tb">
+      <button data-v="front">Front</button><button data-v="top">Top</button><button data-v="side">Side</button><button data-v="iso">Iso</button>
+      <span class="sp"></span>
+      <button id="tInt">Internal view</button><button id="tExp">Exploded</button><button id="tHeat" class="on">Defect heatmap</button><button id="tRot">Auto-rotate</button><button id="tReset">Reset view</button>
+    </div>
+    <div id="view"><canvas id="cv"></canvas><div id="tip"></div><div class="help">Drag: orbit. Right-drag or Shift+drag: pan. Scroll: zoom. Double-click: reset.</div></div>
+    <div class="leg"><span><i style="background:#EF4444"></i>Crack, stripped gear</span><span><i style="background:#FF9F1C"></i>Bent shaft, wear</span><span><i style="background:#FFE14D"></i>Corrosion</span><span><i style="background:#3DCB6B"></i>Healthy</span></div>
+  </section>
+  <aside id="cards"></aside>
+</main>
+
+<section id="decision">
+  <div>
+    <h2>Condition score</h2>
+    <svg class="gauge" viewBox="0 0 200 118"><path d="M20 100A80 80 0 0 1 180 100" pathLength="100" stroke="#364049" stroke-width="14" fill="none" stroke-linecap="round"/><path id="gfg" d="M20 100A80 80 0 0 1 180 100" pathLength="100" stroke="#FF9F1C" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="0 100"/><text id="gnum" x="100" y="88" text-anchor="middle" font-size="42" font-weight="700" fill="#E7EAEE" font-family="Barlow Condensed">0</text><text x="100" y="109" text-anchor="middle" font-size="11" fill="#9AA3AF">out of 100</text></svg>
+    <div class="th"><i id="thm"></i></div>
+    <div class="thl"><span>Below 30: Decompose</span><span>30 to 60: Extract</span><span>60+: Restore</span></div>
+    <table style="margin-top:12px"><thead><tr><th>Factor</th><th class="r">Weight</th><th class="r">Health</th><th class="r">Points</th><th class="r">Lost</th></tr></thead><tbody id="sb"></tbody></table>
+  </div>
+  <div>
+    <h2>Smartboard suggestion</h2>
+    <div class="sug"><div>Suggested: <strong id="sgv">EXTRACT</strong></div><div id="sgc" style="color:var(--mut)"></div><div id="sgw" style="margin-top:6px"></div></div>
+    <p style="color:var(--mut);margin:12px 0 0">The suggestion comes from the score. The final decision is made by the expert.</p>
+    <div class="dbtns"><button class="s" data-o="RESTORE">RESTORE<em>Suggested</em></button><button class="e" data-o="EXTRACT">EXTRACT<em>Suggested</em></button><button class="d" data-o="DECOMPOSE">DECOMPOSE<em>Suggested</em></button></div>
+    <div id="conf" hidden>
+      <div id="cmsg"></div>
+      <textarea id="nt" placeholder="Notes"></textarea>
+      <div id="cerr" class="warnbox"></div>
+      <button class="go" id="cgo">Confirm decision</button>
+    </div>
+    <div class="route" id="route"></div>
+  </div>
+  <div>
+    <h2>What-if inputs</h2>
+    <p style="color:var(--mut);margin:0 0 6px">Change a condition to see how the score and the suggestion respond. This does not change the expert decision.</p>
+    <div id="sls"></div>
+    <button class="btn" id="rs">Reset to scanned values</button>
+    <h2 style="margin-top:20px">Decision log</h2>
+    <table><thead><tr><th>Time</th><th>Suggested</th><th>Final</th><th>Override</th><th>Notes</th></tr></thead><tbody id="lg"><tr><td colspan="5" style="color:var(--mut)">No decision recorded yet.</td></tr></tbody></table>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---------- data ---------- */
+const W={crack:30,wear:25,hard:15,mat:15,corr:10,elec:5};
+const NM={crack:'Cracks',wear:'Wear',hard:'Hardness',mat:'Material',corr:'Corrosion',elec:'Electrical'};
+const H0={crack:35,wear:40,hard:70,mat:75,corr:50,elec:90};
+let H={...H0};
+const score=()=>Object.keys(W).reduce((s,k)=>s+W[k]*H[k]/100,0);
+const sugg=s=>s>=60?'RESTORE':s>=30?'EXTRACT':'DECOMPOSE';
+const COL={RESTORE:'#3DCB6B',EXTRACT:'#FF9F1C',DECOMPOSE:'#EF4444'};
+
+const STAGES=[
+ {id:'clean',t:'Clean',s:'ok',r:'Degreased, 6 min bath',m:['corr']},
+ {id:'laser',t:'Laser 3D scan',s:'bad',r:'Crack 12 mm, runout 0.4 mm',m:['crack','gear','shaft']},
+ {id:'spectro',t:'Spectrometer',s:'ok',r:'ABS, steel, copper',m:[]},
+ {id:'ultra',t:'Ultrasonic',s:'warn',r:'Hidden crack branch',m:['crack']},
+ {id:'mag',t:'Magnetic particle',s:'warn',r:'Stress marks on shaft',m:['shaft']},
+ {id:'elec',t:'Electrical',s:'ok',r:'18 ohm, 0.18 A, insulation OK',m:['motor','corr']},
+ {id:'hard',t:'Hardness',s:'ok',r:'Shaft 42 HRC',m:['shaft']}];
+const SC=[
+ {id:'clean',t:'Cleaning',s:'ok',b:'Pass',rows:[['Process','Degreaser + ultrasonic bath'],['Duration','6 min'],['Residue','None remaining']],n:'Cleaning exposed green-white corrosion deposits on both motor terminals that were hidden under grease.'},
+ {id:'laser',t:'Laser 3D scan',s:'bad',b:'Defects found',rows:[['Housing crack length','12 mm'],['Shaft runout','0.4 mm over 26 mm'],['Gear teeth lost','4 of 14 (intermediate gear)'],['Max surface deviation','0.9 mm near crack']],n:'The scan produced the 3D defect map shown in the viewer. Crack runs from the top edge toward the shaft boss.'},
+ {id:'spectro',t:'Spectrometer',s:'ok',b:'Identified',rows:[['Housing','ABS plastic'],['Motor can','Mild steel'],['Windings','Copper'],['Terminals','Brass'],['Magnets','Ferrite']],n:'All materials are standard and recyclable. No hazardous alloys detected.'},
+ {id:'ultra',t:'Ultrasonic test',s:'warn',b:'Hidden flaw',rows:[['Housing','Crack branch, about 4 mm past visible tip'],['Motor can','No voids'],['Shaft boss','Stress-whitening']],n:'The visible crack is longer inside the wall than on the surface, so the housing is not worth repairing.'},
+ {id:'mag',t:'Magnetic particle test',s:'warn',b:'Stress marks',rows:[['Shaft surface cracks','None'],['Bend zone','Stress marks over 6 mm'],['Can and magnets','Clean']],n:'The shaft is bent but not cracked, so it can be straightened and reused.'},
+ {id:'elec',t:'Electrical test',s:'ok',b:'Within spec',rows:[['Winding resistance','18 ohm'],['No-load current','0.18 A'],['Insulation','OK'],['Terminal contact','Elevated (corrosion)']],n:'The motor core is electrically healthy. Terminal contact improves after cleaning.'},
+ {id:'hard',t:'Hardness tester',s:'ok',b:'OK',rows:[['Shaft hardness','42 HRC'],['Housing','Not applicable']],n:'Shaft hardness is suitable for reuse after straightening.'}];
+const DF=[
+ {id:'crack',c:0xef4444,css:'bad',t:'Housing crack',sev:'Critical',loc:'Front face, upper left, toward shaft boss',sz:'12 mm visible, hidden branch about 4 mm',im:'Housing can no longer hold the gear train in alignment.',ac:'Recycle the ABS housing.',p:[-0.3,0.25,0.6],g:'H'},
+ {id:'gear',c:0xef4444,css:'bad',t:'Stripped gear teeth',sev:'Critical',loc:'Intermediate gear inside housing',sz:'4 of 14 teeth',im:'Torque transfer fails under load and the gear slips.',ac:'Discard the gear. Fit a new one on rebuild.',p:[0.17,0,0.3],g:'G'},
+ {id:'shaft',c:0xff9f1c,css:'warn',t:'Bent output shaft',sev:'Moderate',loc:'Output shaft, outer end',sz:'0.4 mm runout',im:'Causes vibration and gear misalignment.',ac:'Straighten on a press and re-check runout below 0.05 mm.',p:[-0.9,0,1.15],g:'S'},
+ {id:'corr',c:0xffe14d,css:'warn',t:'Terminal corrosion',sev:'Minor',loc:'Both terminals, mostly negative',sz:'About 3 mm patina',im:'Raises contact resistance and heats the joint.',ac:'Clean with IPA and brass brush, then re-solder leads.',p:[1.3,0.3,0],g:'M'},
+ {id:'motor',c:0x3dcb6b,css:'ok',t:'Motor core',sev:'Healthy',loc:'Can, magnets and windings',sz:'Whole assembly',im:'Winding 18 ohm and no-load 0.18 A are within spec.',ac:'Extract and reuse.',p:[0,0.75,0],g:'M'}];
+const MAT=[['ABS housing',38,'Recyclable'],['Steel motor can',22,'Reusable or scrap'],['Copper windings',15,'Reusable'],['Ferrite magnets',8,'Reusable'],['Nylon gears',7,'Scrap'],['Steel shaft',6,'Reusable'],['Brass terminals',2,'Reusable'],['Wires and other',2,'Scrap']];
+const ROUTE={RESTORE:'Repair bay, then inventory shelf A1.',EXTRACT:'Extraction bay, then inventory shelf B2 for motor core, shaft and magnets. ABS housing and gears go to melt/scrap.',DECOMPOSE:'Disposal bin, then material recovery for plastic and metal.'};
+
+/* ---------- static UI ---------- */
+const $=s=>document.querySelector(s);
+$('#pipe').innerHTML=STAGES.map(s=>`<button data-s="${s.id}"><b class="${s.s}">${s.s==='ok'?'✓':'!'} ${s.t}</b><small>${s.r}</small></button>`).join('');
+let h='';
+h+=SC.map(c=>`<div class="card ${c.s}" id="c-${c.id}"><h3>${c.t}<span class="${c.s}">${c.b}</span></h3><dl>${c.rows.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('')}</dl><p>${c.n}</p></div>`).join('');
+h+='<h2 class="sec">Defect register</h2>'+DF.map(d=>`<div class="card ${d.css}" id="d-${d.id}" data-f="${d.id}" style="cursor:pointer"><h3>${d.t}<span class="${d.css}">${d.sev}</span></h3><dl><dt>Location</dt><dd>${d.loc}</dd><dt>Size</dt><dd>${d.sz}</dd></dl><p><b>Effect:</b> ${d.im}</p><p><b>Action:</b> ${d.ac}</p></div>`).join('');
+h+='<h2 class="sec">Material composition</h2><div class="card">'+MAT.map(m=>`<div class="mrow"><span>${m[0]}</span><div class="bar"><i style="width:${m[1]*2}%;background:var(--yel)"></i></div><span>${m[1]}%</span></div><div style="color:var(--mut);font-size:12px;margin:-3px 0 0 138px">${m[2]}</div>`).join('')+'</div>';
+h+='<h2 class="sec">Recovery overview</h2><div class="card ok"><dl><dt>Reusable</dt><dd>Motor core, shaft, magnets, copper</dd><dt>Scrap</dt><dd>ABS housing, stripped gear</dd><dt>Estimated recovery</dt><dd>Rs 45 (demo)</dd><dt>Scrap value if melted</dt><dd>Rs 8 (demo)</dd><dt>Shelf</dt><dd>B2</dd></dl><p><b>Extraction steps</b></p><ol><li>Open the housing and remove the gear train.</li><li>Separate the motor core from the gearbox.</li><li>Straighten the shaft and re-check runout.</li><li>Clean terminals and re-solder leads.</li><li>Re-test the motor and tag the QR record.</li><li>Shelve at B2.</li></ol></div>';
+$('#cards').innerHTML=h;
+$('#sls').innerHTML=[['crack','Crack integrity'],['wear','Gear wear condition'],['hard','Shaft hardness'],['corr','Corrosion condition']].map(a=>`<div class="sl"><label for="r-${a[0]}">${a[1]}</label><input type="range" id="r-${a[0]}" min="0" max="100" value="${H0[a[0]]}" data-k="${a[0]}"><span id="v-${a[0]}">${H0[a[0]]}</span></div>`).join('');
+
+/* ---------- score, suggestion, decision ---------- */
+let shown=0,chosen=null,decided=null;
+function paint(v,col){$('#gfg').setAttribute('stroke-dasharray',v+' 100');$('#gfg').setAttribute('stroke',col);$('#gnum').textContent=Math.round(v)}
+function animTo(t){const f=shown,t0=performance.now(),col=COL[sugg(t)];(function a(n){const k=Math.min(1,(n-t0)/700);shown=f+(t-f)*(1-Math.pow(1-k,3));paint(shown,col);if(k<1)requestAnimationFrame(a)})(t0)}
+function update(){
+  const s=score(),sg=sugg(s);
+  animTo(s);
+  $('#thm').style.left=`calc(${s}% - 2px)`;
+  $('#sb').innerHTML=Object.keys(W).map(k=>{const p=W[k]*H[k]/100;return `<tr><td>${NM[k]}</td><td class="r">${W[k]}%</td><td class="r">${H[k]}</td><td class="r">${p.toFixed(2)}</td><td class="r bad">-${(W[k]-p).toFixed(2)}</td></tr>`}).join('')+`<tr><td><b>Total</b></td><td class="r">100%</td><td></td><td class="r"><b>${s.toFixed(2)}</b></td><td></td></tr>`;
+  $('#sgv').textContent=sg;$('#sgv').style.color=COL[sg];
+  const d=Math.min(...[30,60].map(t=>Math.abs(s-t)));
+  const near=(sg==='RESTORE'?s-60:sg==='EXTRACT'?Math.min(s-30,60-s):30-s);
+  $('#sgc').textContent=Math.min(Math.abs(s-30),Math.abs(s-60))<4?'Borderline score. Expert review recommended.':'Score is well inside the '+sg.toLowerCase()+' band. High confidence.';
+  const top=Object.keys(W).map(k=>[k,W[k]-W[k]*H[k]/100]).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  $('#sgw').innerHTML='<span style="color:var(--mut)">Biggest losses:</span> '+top.map(x=>`${NM[x[0]]} -${x[1].toFixed(1)}`).join(', ')+(H.elec>=80?'. Electrical health is good, so the motor core is reusable.':'.');
+  document.querySelectorAll('.dbtns button').forEach(b=>{b.classList.toggle('sg',b.dataset.o===sg);b.classList.toggle('sel',b.dataset.o===(chosen||decided))});
+  if(chosen)confText();
+  const o=chosen||decided||sg;
+  $('#route').innerHTML=`<b>${chosen||decided?'Routing for '+o:'Routing if suggestion is accepted ('+o+')'}:</b> ${ROUTE[o]}`;
+}
+function confText(){const sg=sugg(score()),ov=chosen!==sg;
+  $('#cmsg').innerHTML=`You chose <b style="color:${COL[chosen]}">${chosen}</b>. System suggested <b>${sg}</b>.`+(ov?'<div class="warnbox">This overrides the suggestion. Please give a reason below.</div>':'');
+  $('#nt').placeholder=ov?'Reason for override (required)':'Notes (optional)'}
+document.querySelectorAll('.dbtns button').forEach(b=>b.onclick=()=>{chosen=b.dataset.o;$('#conf').hidden=false;$('#cerr').textContent='';update()});
+$('#cgo').onclick=()=>{const sg=sugg(score()),ov=chosen!==sg,n=$('#nt').value.trim();
+  if(ov&&!n){$('#cerr').textContent='A reason is required when overriding the suggestion.';return}
+  if(!decided&&$('#lg').querySelector('td[colspan]'))$('#lg').innerHTML='';
+  const tr=document.createElement('tr');tr.innerHTML=`<td>${new Date().toLocaleTimeString()}</td><td>${sg}</td><td style="color:${COL[chosen]}">${chosen}</td><td>${ov?'Yes':'No'}</td><td>${n.replace(/</g,'&lt;')||'-'}</td>`;$('#lg').prepend(tr);
+  decided=chosen;chosen=null;$('#nt').value='';$('#conf').hidden=true;
+  const st=$('#status');st.textContent='Decided by expert: '+decided;st.classList.add('done');update()};
+document.querySelectorAll('#sls input').forEach(i=>i.oninput=()=>{H[i.dataset.k]=+i.value;$('#v-'+i.dataset.k).textContent=i.value;update()});
+$('#rs').onclick=()=>{H={...H0};document.querySelectorAll('#sls input').forEach(i=>{i.value=H0[i.dataset.k];$('#v-'+i.dataset.k).textContent=H0[i.dataset.k]});update()};
+update();
+
+/* ---------- 3D scene ---------- */
+const view=$('#view'),cv=$('#cv');
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(38,1,.1,100);
+scene.add(new THREE.HemisphereLight(0xdfe8ff,0x20242a,.9));
+const kl=new THREE.DirectionalLight(0xffffff,1.1);kl.position.set(5,8,6);scene.add(kl);
+const rl=new THREE.DirectionalLight(0x8fb4ff,.7);rl.position.set(-6,3,-6);scene.add(rl);
+const fl=new THREE.PointLight(0xffffff,.6);fl.position.set(0,-3,6);scene.add(fl);
+const grid=new THREE.GridHelper(16,32,0x3a444f,0x2a313a);grid.position.y=-1.5;scene.add(grid);
+const M=(c,m=0.1,r=0.5,x={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:m,roughness:r},x));
+const glass=[];
+const mk=(g,mat,p=[0,0,0],par)=>{const m=new THREE.Mesh(g,mat);m.position.set(...p);if(par)par.add(m);return m};
+const gH=new THREE.Group(),gG=new THREE.Group(),gS=new THREE.Group(),gM=new THREE.Group();scene.add(gH,gG,gS,gM);
+const yel=M(0xf2c200,0.05,0.35,{transparent:true}),can=M(0xc3c8ce,0.85,0.3,{transparent:true,side:THREE.DoubleSide});glass.push([yel,1],[can,1]);
+mk(new THREE.BoxGeometry(3,1.4,1.1),yel,[0,0,0],gH);
+[[-1.2,.5],[1.2,.5],[-1.2,-.5],[1.2,-.5]].forEach(p=>{const s=mk(new THREE.CylinderGeometry(.09,.09,.04,12),M(0x8a8f96,.8,.3),[p[0],p[1],.56],gH);s.rotation.x=Math.PI/2});
+const tube=(a,b,r,mat,par)=>{a=new THREE.Vector3(...a);b=new THREE.Vector3(...b);const d=b.clone().sub(a),m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,d.length(),6),mat);m.position.copy(a.clone().add(b).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());par.add(m)};
+const crM=new THREE.MeshBasicMaterial({color:0xff2a2a});
+const cp=[[-.15,.7,.57],[-.05,.45,.57],[-.3,.25,.57],[-.2,0,.57],[-.5,-.2,.57]];
+for(let i=0;i<cp.length-1;i++)tube(cp[i],cp[i+1],.03,crM,gH);
+tube([-.3,.25,.57],[-.55,.3,.57],.02,crM,gH);
+/* gears */
+function gear(r,n,dp,strip,x,y,z,col){const s=new THREE.Shape(),st=Math.PI*2/n;
+  for(let i=0;i<n;i++){const a=i*st,rt=strip.includes(i)?r*.84:r,rr=r*.82,pt=[[-.5,rr],[-.28,rr],[-.16,rt],[.16,rt],[.28,rr],[.5,rr]];
+    pt.forEach(q=>{const an=a+q[0]*st;(i===0&&q===pt[0])?s.moveTo(Math.cos(an)*q[1],Math.sin(an)*q[1]):s.lineTo(Math.cos(an)*q[1],Math.sin(an)*q[1])})}
+  const h=new THREE.Path();h.absarc(0,0,r*.2,0,Math.PI*2,true);s.holes.push(h);
+  const g=new THREE.ExtrudeGeometry(s,{depth:dp,bevelEnabled:false});g.translate(0,0,-dp/2);return mk(g,M(col,.2,.6),[x,y,z],gG)}
+gear(.62,18,.22,[],-.9,0,.0,0x2c2f35);
+gear(.45,14,.22,[3,4,5,10],.17,0,.15,0x3a3d44);
+gear(.22,8,.22,[],.84,0,-.1,0x2c2f35);
+/* shaft */
+const steel=M(0xd5d9de,.95,.2);
+const sa=mk(new THREE.CylinderGeometry(.13,.13,1.85,20),steel,[-.9,0,-.38],gS);sa.rotation.x=Math.PI/2;
+const pv=new THREE.Group();pv.position.set(-.9,0,.55);pv.rotation.x=-.12;gS.add(pv);
+const sb=mk(new THREE.CylinderGeometry(.13,.13,.9,20),M(0xcdb89c,.9,.25),[0,0,.45],pv);sb.rotation.x=Math.PI/2;
+/* motor */
+const cn=mk(new THREE.CylinderGeometry(.62,.62,2.4,32),can,[2.7,0,0],gM);cn.rotation.z=Math.PI/2;
+const cap=mk(new THREE.CylinderGeometry(.64,.64,.12,32),M(0x555b63,.7,.4),[3.95,0,0],gM);cap.rotation.z=Math.PI/2;
+const cu=mk(new THREE.CylinderGeometry(.44,.44,1.5,24),M(0xc2733a,.8,.35),[2.7,0,0],gM);cu.rotation.z=Math.PI/2;
+[0,Math.PI].forEach(t=>{const m=mk(new THREE.CylinderGeometry(.58,.58,1.7,20,1,true,t,1.8),M(0x3a3d44,.3,.6,{side:THREE.DoubleSide}),[2.7,0,0],gM);m.rotation.z=Math.PI/2});
+const brass=M(0xc9a24a,.8,.3);
+[.26,-.26].forEach(y=>mk(new THREE.BoxGeometry(.25,.14,.05),brass,[4.1,y,0],gM));
+const pat=M(0xbfe8d0,0,.9);
+[[4.12,.26,.04],[4.15,.24,-.03],[4.12,-.26,.04]].forEach(p=>{const s=mk(new THREE.SphereGeometry(.07,10,8),pat,p,gM);s.scale.set(1,.7,.7)});
+[[.26,0xcc2222],[-.26,0x111111]].forEach(a=>{const w=[[4.2,a[0],0],[4.7,a[0]*1.5,0],[5.0,-.5,a[0]*1.5]];for(let i=0;i<2;i++)tube(w[i],w[i+1],.04,M(a[1],0,.6),gM)});
+/* markers & halos */
+const mks=[],halos=[];
+DF.forEach(d=>{const par={H:gH,G:gG,S:gS,M:gM}[d.g];
+  const px=d.id==='corr'?[4.3,.3,.1]:d.id==='motor'?[2.7,.85,0]:d.p;
+  const m=mk(new THREE.SphereGeometry(.13,16,12),new THREE.MeshBasicMaterial({color:d.c,depthTest:false}),px,par);m.renderOrder=10;m.userData=d;mks.push(m);
+  const hl=mk(new THREE.SphereGeometry(d.id==='motor'?.9:.42,20,14),new THREE.MeshBasicMaterial({color:d.c,transparent:true,opacity:.2,depthWrite:false,blending:THREE.AdditiveBlending}),px,par);
+  if(d.id==='motor')hl.scale.set(1.5,.8,.8);if(d.id==='crack')hl.scale.set(1.2,2,.4);if(d.id==='corr')hl.scale.set(.6,.8,.6);hl.renderOrder=9;halos.push(hl)});
+/* camera control */
+const D={th:.8,ph:1.1,r:10.5,t:new THREE.Vector3(2,0,0)},C={th:D.th,ph:D.ph,r:D.r,t:D.t.clone()};
+const HOME={th:.8,ph:1.1,r:10.5,t:new THREE.Vector3(2,0,0)};
+const PRE={front:[0,Math.PI/2],top:[0,.06],side:[Math.PI/2,Math.PI/2],iso:[.8,1.1]};
+let vt=0,vp=0,drag=false,pan=false,lx=0,ly=0,moved=0,auto=false,sx=0,sy=0;
+const goto=(o)=>{if(o.th!==undefined)D.th=o.th;if(o.ph!==undefined)D.ph=o.ph;if(o.r)D.r=o.r;if(o.t)D.t.copy(o.t)};
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);drag=true;pan=e.button===2||e.shiftKey;lx=sx=e.clientX;ly=sy=e.clientY;moved=0;vt=vp=0;cv.style.cursor='grabbing'});
+cv.addEventListener('pointermove',e=>{
+  if(drag){const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+    if(pan){const k=D.r*.0018,right=new THREE.Vector3().setFromMatrixColumn(cam.matrix,0),up=new THREE.Vector3().setFromMatrixColumn(cam.matrix,1);D.t.addScaledVector(right,-dx*k).addScaledVector(up,dy*k)}
+    else{vt=-dx*.007;vp=-dy*.007;D.th+=vt;D.ph=Math.min(Math.PI-.05,Math.max(.05,D.ph+vp))}}
+  else hover(e)});
+cv.addEventListener('pointerup',e=>{drag=false;cv.style.cursor='grab';if(moved<4)click(e)});
+cv.addEventListener('wheel',e=>{e.preventDefault();D.r=Math.min(22,Math.max(2.5,D.r*Math.exp(e.deltaY*.0012)))},{passive:false});
+cv.addEventListener('dblclick',()=>goto(HOME));
+const rc=new THREE.Raycaster(),mv=new THREE.Vector2();
+function pick(e){const b=cv.getBoundingClientRect();mv.set((e.clientX-b.left)/b.width*2-1,-((e.clientY-b.top)/b.height)*2+1);rc.setFromCamera(mv,cam);const h=rc.intersectObjects(mks,false);return h.length?h[0].object.userData:null}
+function hover(e){const d=pick(e),t=$('#tip');if(d){const b=view.getBoundingClientRect();t.style.display='block';t.style.left=(e.clientX-b.left+14)+'px';t.style.top=(e.clientY-b.top+14)+'px';t.innerHTML=`<b>${d.t}</b><br>${d.sz}`;cv.style.cursor='pointer'}else{t.style.display='none';cv.style.cursor='grab'}}
+function click(e){const d=pick(e);if(d)focus(d.id)}
+let hi=[];
+function focus(id){const m=mks.find(x=>x.userData.id===id),v=new THREE.Vector3();m.getWorldPosition(v);goto({t:v,r:4.5});setHi([id]);
+  const el=$('#d-'+id);el.scrollIntoView({behavior:'smooth',block:'center'});flash(el)}
+function flash(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1400)}
+function setHi(ids){hi=ids}
+document.querySelectorAll('[data-f]').forEach(c=>c.onclick=()=>focus(c.dataset.f));
+document.querySelectorAll('#pipe button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#pipe button').forEach(x=>x.classList.remove('on'));b.classList.add('on');const s=STAGES.find(x=>x.id===b.dataset.s);setHi(s.m);const el=$('#c-'+s.id);el.scrollIntoView({behavior:'smooth',block:'center'});flash(el);goto(HOME)});
+/* toggles */
+const tg=(id,fn)=>{const b=$(id);b.onclick=()=>{b.classList.toggle('on');fn(b.classList.contains('on'))}};
+let internal=false,expl=false;
+tg('#tInt',v=>internal=v);tg('#tExp',v=>expl=v);tg('#tHeat',v=>halos.forEach(h=>h.userData.off=!v));tg('#tRot',v=>auto=v);
+$('#tReset').onclick=()=>{goto(HOME);setHi([]);document.querySelectorAll('#pipe button').forEach(x=>x.classList.remove('on'))};
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const p=PRE[b.dataset.v];goto({th:p[0],ph:p[1],r:10.5,t:HOME.t})});
+/* loop */
+function resize(){const w=view.clientWidth,h=view.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(view);resize();
+const tgt=new THREE.Vector3();
+function tick(t){requestAnimationFrame(tick);
+  if(!drag){if(Math.abs(vt)>1e-4||Math.abs(vp)>1e-4){D.th+=vt;D.ph=Math.min(Math.PI-.05,Math.max(.05,D.ph+vp));vt*=.92;vp*=.92}}
+  if(auto&&!drag)D.th+=.005;
+  const k=.16;C.th+=(D.th-C.th)*k;C.ph+=(D.ph-C.ph)*k;C.r+=(D.r-C.r)*k;C.t.lerp(D.t,k);
+  cam.position.set(C.t.x+C.r*Math.sin(C.ph)*Math.sin(C.th),C.t.y+C.r*Math.cos(C.ph),C.t.z+C.r*Math.sin(C.ph)*Math.cos(C.th));cam.lookAt(C.t);cam.updateMatrixWorld();
+  glass.forEach(g=>{const o=internal?.16:1;g[0].opacity+=(o-g[0].opacity)*.15;g[0].depthWrite=g[0].opacity>.9});
+  const ey=expl?1.9:0,ex=expl?1.3:0;gH.position.y+=(ey-gH.position.y)*.12;gM.position.x+=(ex-gM.position.x)*.12;
+  mks.forEach((m,i)=>{const d=m.userData,on=hi.includes(d.id),p=1+.15*Math.sin(t*.004+i);const s=on?1.8*p:hi.length?.6:p;m.scale.setScalar(s);halos[i].visible=!halos[i].userData.off;halos[i].material.opacity=on?.4:.2});
+  R.render(scene,cam)}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
